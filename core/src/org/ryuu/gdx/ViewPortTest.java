@@ -22,8 +22,8 @@ import static com.badlogic.gdx.utils.Align.left;
 import static org.ryuu.gdx.graphics.glutils.utils.Shaders.*;
 import static org.ryuu.gdx.scenes.scene2d.utils.Actors.align;
 import static org.ryuu.gdx.scenes.scene2d.utils.Actors.setSize;
-import static org.ryuu.gdx.scenes.scene2d.utils.ClickListeners.addColorChange;
 import static org.ryuu.gdx.CoordinateManager.DESIGN_RESOLUTION;
+import static org.ryuu.gdx.scenes.scene2d.utils.ClickListeners.*;
 
 public class ViewPortTest extends ApplicationAdapter {
     @Getter
@@ -49,6 +49,8 @@ public class ViewPortTest extends ApplicationAdapter {
             material.setAttributef(HDR_COLOR_ATTRIBUTE, 1, 1, 1, 1);
             material.setAttributef(INTENSITY_ATTRIBUTE, 1 / (i + 1f), 0, 0, 0);
             addColorChange(materialGroup, WHITE, (i + 1) * 2);
+            materialGroup.setOrigin(center);
+            addDownUpSizeChange(materialGroup);
         }
         Gdx.input.setInputProcessor(stage);
     }
