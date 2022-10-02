@@ -1,18 +1,17 @@
 package org.ryuu.gdx.test;
 
-import org.robovm.apple.foundation.NSAutoreleasePool;
-import org.robovm.apple.uikit.UIApplication;
-
 import com.badlogic.gdx.backends.iosrobovm.IOSApplication;
 import com.badlogic.gdx.backends.iosrobovm.IOSApplicationConfiguration;
-import org.ryuu.gdx.ViewPortTest;
+import org.robovm.apple.foundation.NSAutoreleasePool;
+import org.robovm.apple.uikit.UIApplication;
+import org.ryuu.gdx.Game;
 
 public class IOSLauncher extends IOSApplication.Delegate {
     @Override
     protected IOSApplication createApplication() {
         IOSApplicationConfiguration config = new IOSApplicationConfiguration();
         config.useHaptics = false;
-        return new IOSApplication(new ViewPortTest(), config);
+        return new IOSApplication(Game.GAME_APPLICATION, config);
     }
 
     public static void main(String[] argv) {
