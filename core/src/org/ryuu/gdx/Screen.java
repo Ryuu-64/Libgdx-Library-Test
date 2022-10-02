@@ -6,6 +6,7 @@ import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -57,7 +58,8 @@ public class Screen extends ScreenAdapter {
         }
         extendViewport.setMinWorldWidth(designWorldWidth);
         extendViewport.setMinWorldHeight(designWorldHeight);
-        extendViewport.update(width, height, true);
+        extendViewport.update(width, height);
+        orthographicCamera.position.set(designWorldWidth >> 1, designWorldHeight >> 1, 0);
     }
 
     @Override
