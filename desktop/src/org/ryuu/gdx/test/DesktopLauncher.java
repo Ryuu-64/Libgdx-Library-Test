@@ -2,8 +2,7 @@ package org.ryuu.gdx.test;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-
-import static org.ryuu.gdx.GdxApplication.GDX_APPLICATION;
+import org.ryuu.gdx.GdxApplication;
 
 // Please note that on macOS your application needs to be started with the -XstartOnFirstThread JVM argument
 public class DesktopLauncher {
@@ -11,6 +10,6 @@ public class DesktopLauncher {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setTitle("ViewPortTest");
         config.setWindowedMode(1920, 1080);
-        new Lwjgl3Application(GDX_APPLICATION, config);
+        new Lwjgl3Application(new GdxApplication(), config);
     }
 }

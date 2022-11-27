@@ -11,7 +11,7 @@ public class IOSLauncher extends IOSApplication.Delegate {
     protected IOSApplication createApplication() {
         IOSApplicationConfiguration config = new IOSApplicationConfiguration();
         config.useHaptics = false;
-        return new IOSApplication(GdxApplication.GDX_APPLICATION, config);
+        return new IOSApplication(new GdxApplication(), config);
     }
 
     public static void main(String[] argv) {
