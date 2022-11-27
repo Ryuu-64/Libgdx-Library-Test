@@ -1,5 +1,23 @@
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-sourceSets.main.java.srcDirs = [ "src/" ]
+sourceSets.main.java.srcDirs = ["src/"]
 
 eclipse.project.name = appName + "-core"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+import org.ryuu.file_path_reference_generator.core.Generator
+
+task generateAssetsFilePathReferences() {
+    doLast {
+        Generator.generate(
+                "${project.rootDir}/assets",
+                "${project.rootDir}/core/src/org/ryuu/gdx",
+                "org.ryuu.gdx",
+                "\$assets.java"
+        )
+    }
+}

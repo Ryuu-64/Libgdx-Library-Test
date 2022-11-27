@@ -5,16 +5,10 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import lombok.Getter;
-
-import static com.badlogic.gdx.Gdx.files;
-import static org.ryuu.gdx.Orientation.Landscape;
-import static org.ryuu.gdx.Orientation.Portrait;
+import org.ryuu.gdx.settings.ScreenSettings;
 
 public class Screen extends ScreenAdapter {
     public static final Screen SCREEN = new Screen();
@@ -31,11 +25,7 @@ public class Screen extends ScreenAdapter {
         orthographicCamera = new OrthographicCamera();
         extendViewport = new ExtendViewport(ScreenSettings.getDesignWorldWidth(), ScreenSettings.getDesignWorldHeight(), orthographicCamera);
         stage = new Stage(extendViewport);
-        stage.setDebugAll(GameSettings.isStageSetDebugAll());
         inputMultiplexer.addProcessor(stage);
-        Image background = new Image(new Texture(files.internal("badlogic.jpg")));
-        background.setSize(ScreenSettings.getDesignWorldWidth(), ScreenSettings.getDesignWorldHeight());
-        stage.addActor(background);
     }
 
     @Override
@@ -47,19 +37,7 @@ public class Screen extends ScreenAdapter {
 
     @Override
     public void resize(int width, int height) {
-        int designWorldWidth = ScreenSettings.getDesignWorldWidth();
-        int designWorldHeight = ScreenSettings.getDesignWorldHeight();
-        if (Game.getOrientation() == Portrait && GameSettings.getDefaultOrientation() != Portrait) {
-            designWorldWidth = ScreenSettings.getDesignWorldHeight();
-            designWorldHeight = ScreenSettings.getDesignWorldWidth();
-        } else if (Game.getOrientation() == Landscape && GameSettings.getDefaultOrientation() != Landscape) {
-            designWorldWidth = ScreenSettings.getDesignWorldHeight();
-            designWorldHeight = ScreenSettings.getDesignWorldWidth();
-        }
-        extendViewport.setMinWorldWidth(designWorldWidth);
-        extendViewport.setMinWorldHeight(designWorldHeight);
         extendViewport.update(width, height);
-        orthographicCamera.position.set(designWorldWidth >> 1, designWorldHeight >> 1, 0);
     }
 
     @Override
