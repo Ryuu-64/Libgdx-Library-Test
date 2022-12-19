@@ -5,13 +5,13 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import lombok.Getter;
-import org.ryuu.gdx.settings.ScreenSettings;
+import lombok.Setter;
 
-public class Screen extends ScreenAdapter {
-    public static final Screen SCREEN = new Screen();
+public class StageScreen extends ScreenAdapter {
     @Getter
     private final OrthographicCamera orthographicCamera;
     @Getter
@@ -21,9 +21,9 @@ public class Screen extends ScreenAdapter {
     @Getter
     private final InputMultiplexer inputMultiplexer = new InputMultiplexer();
 
-    private Screen() {
+    public StageScreen(float designWorldWidth, float designWorldHeight) {
         orthographicCamera = new OrthographicCamera();
-        extendViewport = new ExtendViewport(ScreenSettings.getDesignWorldWidth(), ScreenSettings.getDesignWorldHeight(), orthographicCamera);
+        extendViewport = new ExtendViewport(designWorldWidth, designWorldHeight, orthographicCamera);
         stage = new Stage(extendViewport);
         inputMultiplexer.addProcessor(stage);
     }
@@ -43,5 +43,10 @@ public class Screen extends ScreenAdapter {
     @Override
     public void dispose() {
         stage.dispose();
+    }
+
+    public <T extends Actor> T setSizeAsStage(T actor) {
+        actor.setSize(stage.getWidth(), stage.getHeight());
+        return actor;
     }
 }
