@@ -1,3 +1,4 @@
 rootProject.name = 'Libgdx-Library-Test'
-include 'desktop', 'android', 'ios', 'core', ':Libgdx-Library'
+include 'desktop', 'android', 'ios', 'core', ':Libgdx-Library', ':Popup'
 project(':Libgdx-Library').projectDir = file('../Libgdx-Library')
+project(':Popup').projectDir = file('../Popup')
