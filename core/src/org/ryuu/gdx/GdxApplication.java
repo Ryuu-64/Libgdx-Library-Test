@@ -1,6 +1,5 @@
 package org.ryuu.gdx;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
@@ -18,6 +17,8 @@ import static org.ryuu.gdx.scenes.scene2d.utils.Actors.align;
 public class GdxApplication extends com.badlogic.gdx.Game {
     @Getter
     private static AssetManager assetManager;
+    @Getter
+    private static SoundManager soundManager;
 
     @Override
     public void create() {
@@ -37,13 +38,11 @@ public class GdxApplication extends com.badlogic.gdx.Game {
         assetManager.load($assets.sfx.goal_mp3, Sound.class);
         assetManager.finishLoading();
 
-        SoundManager.init(10, (path) -> assetManager.get(path, Sound.class));
+        soundManager = new SoundManager(10, (path) -> assetManager.get(path, Sound.class));
         for (int i = 0; i < 10; i++) {
             getStage().addAction(ActionUtil.delay(1, () -> {
-                SoundManager.SoundWrapper play = SoundManager.play($assets.sfx.button_mp3);
-                getStage().addAction(ActionUtil.delay(1, () -> {
-                    System.out.println(play);
-                }));
+                SoundManager.SoundWrapper play = soundManager.play($assets.sfx.button_mp3);
+                getStage().addAction(ActionUtil.delay(1, () -> System.out.println(play)));
             }));
         }
     }

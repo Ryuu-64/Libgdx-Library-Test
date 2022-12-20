@@ -14,15 +14,19 @@ import java.util.concurrent.Executors;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class SoundManager {
-    private static final List<IAction> playSoundList = new ArrayList<>();
-    private static final List<IAction> executePlaySoundList = new ArrayList<>();
-
+    private final List<IAction> playSoundList = new ArrayList<>();
+    private final List<IAction> executePlaySoundList = new ArrayList<>();
     @Getter
     @Setter
-    private static IFunc1Arg<String, Sound> getSoundByPath;
-    private static long interval = 0;
+    private long interval;
+    @Getter
+    @Setter
+    private IFunc1Arg<String, Sound> getSoundByPath;
 
-    static {
+    public SoundManager(long interval, IFunc1Arg<String, Sound> getSoundByPath) {
+        this.interval = interval;
+        this.getSoundByPath = getSoundByPath;
+
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
             synchronized (playSoundList) {
                 if (!playSoundList.isEmpty()) {
@@ -33,15 +37,10 @@ public class SoundManager {
                     executePlaySoundList.remove(0).invoke();
                 }
             }
-        }, 0, interval, MILLISECONDS);
+        }, 0, this.interval, MILLISECONDS);
     }
 
-    public static void init(long interval, IFunc1Arg<String, Sound> getSoundByPath) {
-        SoundManager.interval = interval;
-        SoundManager.getSoundByPath = getSoundByPath;
-    }
-
-    public static SoundWrapper play(String path) {
+    public SoundWrapper play(String path) {
         synchronized (playSoundList) {
             SoundWrapper soundWrapper = new SoundWrapper();
             playSoundList.add(() -> {
@@ -53,7 +52,7 @@ public class SoundManager {
         }
     }
 
-    public static SoundWrapper play(String path, float volume) {
+    public SoundWrapper play(String path, float volume) {
         synchronized (playSoundList) {
             SoundWrapper soundWrapper = new SoundWrapper();
             playSoundList.add(() -> {
@@ -65,7 +64,7 @@ public class SoundManager {
         }
     }
 
-    public static SoundWrapper play(String path, float volume, float pitch, float pan) {
+    public SoundWrapper play(String path, float volume, float pitch, float pan) {
         synchronized (playSoundList) {
             SoundWrapper soundWrapper = new SoundWrapper();
             playSoundList.add(() -> {
@@ -77,7 +76,7 @@ public class SoundManager {
         }
     }
 
-    public static SoundWrapper loop(String path) {
+    public SoundWrapper loop(String path) {
         synchronized (playSoundList) {
             SoundWrapper soundWrapper = new SoundWrapper();
             playSoundList.add(() -> {
@@ -89,7 +88,7 @@ public class SoundManager {
         }
     }
 
-    public static SoundWrapper loop(String path, float volume) {
+    public SoundWrapper loop(String path, float volume) {
         synchronized (playSoundList) {
             SoundWrapper soundWrapper = new SoundWrapper();
             playSoundList.add(() -> {
@@ -101,7 +100,7 @@ public class SoundManager {
         }
     }
 
-    public static SoundWrapper loop(String path, float volume, float pitch, float pan) {
+    public SoundWrapper loop(String path, float volume, float pitch, float pan) {
         synchronized (playSoundList) {
             SoundWrapper soundWrapper = new SoundWrapper();
             playSoundList.add(() -> {
