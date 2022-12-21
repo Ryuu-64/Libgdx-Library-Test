@@ -4,6 +4,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
@@ -13,6 +14,7 @@ import org.ryuu.gdx.scenes.scene2d.utils.ActionUtil;
 import org.ryuu.gdx.audio.SoundManager;
 import org.ryuu.popup.PopUpEvent;
 
+import static com.badlogic.gdx.physics.box2d.BodyDef.BodyType.*;
 import static com.badlogic.gdx.utils.Align.center;
 import static org.ryuu.gdx.$assets.texture2d.badlogic_jpg;
 import static org.ryuu.gdx.scenes.scene2d.utils.Actors.align;
@@ -25,17 +27,30 @@ public class GdxApplication extends com.badlogic.gdx.Game {
 
     @Override
     public void create() {
-        setScreen(new StageScreen(1920, 1080));
+        setScreen(new StageWorldScreen(1920, 1080, new StageWorldScreen.WorldSettings(
+                120, .02f, 4, 4
+        )));
+        box2dWorldTest();
         popUpTest();
-        soundMangerTest();
     }
 
-    public StageScreen getStageScreen() {
-        return (StageScreen) getScreen();
+    public StageWorldScreen getStageWorldScreen() {
+        return (StageWorldScreen) getScreen();
     }
 
     public Stage getStage() {
-        return ((StageScreen) getScreen()).getStage();
+        return ((StageWorldScreen) getScreen()).getStage();
+    }
+
+    @Override
+    public void render() {
+        super.render();
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        getStageWorldScreen().dispose();
     }
 
     public void soundMangerTest() {
@@ -52,7 +67,7 @@ public class GdxApplication extends com.badlogic.gdx.Game {
     public void popUpTest() {
         PopUpEvent popUpEvent = new PopUpEvent();
 
-        Group group = getStageScreen().setSizeAsStage(new Group());
+        Group group = getStageWorldScreen().setSizeAsStage(new Group());
         getStage().addActor(group);
 
         popUpEvent.add(1, popUp -> popUp.getOnDispose().invoke());
@@ -96,5 +111,19 @@ public class GdxApplication extends com.badlogic.gdx.Game {
         });
 
         popUpEvent.invoke();
+    }
+
+    public void box2dWorldTest() {
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.position.set(getStageWorldScreen().worldUnitToMeter(getStage().getWidth() / 2), getStageWorldScreen().worldUnitToMeter(getStage().getHeight() / 2));
+        bodyDef.type = StaticBody;
+        Body body = getStageWorldScreen().getWorld().createBody(bodyDef);
+        MassData massData = new MassData();
+        massData.mass = Integer.MAX_VALUE;
+        body.setMassData(massData);
+        CircleShape circleShape = new CircleShape();
+        circleShape.setRadius(4.5f);
+        body.createFixture(circleShape, 1);
+        circleShape.dispose();
     }
 }
