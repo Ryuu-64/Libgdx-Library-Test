@@ -16,6 +16,7 @@ public class $assets {
 	
 	public static class texture2d {
 		public static final String badlogic_jpg = "texture2d/badlogic.jpg";
+		public static final String blur_png = "texture2d/blur.png";
 		public static final String whitePixel_png = "texture2d/whitePixel.png";
 	}
 	
