@@ -188,13 +188,16 @@ public class GameApplication extends Game {
                 "attribute vec4 a_position;\n" +
                         "attribute vec4 a_color;\n" +
                         "attribute vec2 a_texCoord0;\n" +
+                        "attribute vec2 a_resolution;\n" +
                         "uniform mat4 u_projTrans;\n" +
                         "varying vec4 v_color;\n" +
                         "varying vec2 v_texCoords;\n" +
+                        "varying vec2 v_resolution;\n" +
                         "\n" +
                         "void main() {\n" +
                         "    v_color = a_color;\n" +
                         "    v_texCoords = a_texCoord0;\n" +
+                        "    v_resolution = a_resolution;\n" +
                         "    gl_Position = u_projTrans * a_position;\n" +
                         "}",
                 "#ifdef GL_ES\n" +
@@ -203,51 +206,53 @@ public class GameApplication extends Game {
                         "\n" +
                         "varying vec4 v_color;\n" +
                         "varying vec2 v_texCoords;\n" +
+                        "varying vec2 v_resolution;\n" +
                         "uniform sampler2D u_texture;\n" +
                         "\n" +
                         "float normpdf(in float x, in float sigma) {\n" +
-                        "    return 0.39894*exp(-0.5*x*x/(sigma*sigma))/sigma;\n" +
+                        "    return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma;\n" +
                         "}\n" +
                         "\n" +
                         "vec3 gaussianBlur(sampler2D texture) {\n" +
-                        "    //declare stuff\n" +
-                        "    const int mSize = 1;\n" +
+                        "    const int mSize = 256;// TODO core size\n" +
                         "    const int kSize = (mSize-1)/2;\n" +
                         "    float kernel[mSize];\n" +
                         "    vec3 finalColor = vec3(0.0);\n" +
                         "\n" +
-                        "    //create the 1-D kernel\n" +
+                        "    // create the 1-D kernel\n" +
                         "    float sigma = 7.0;\n" +
                         "    float Z = 0.0;\n" +
                         "    for (int i = 0; i <= kSize; i++)\n" +
                         "    {\n" +
-                        "        kernel[kSize+i] = kernel[kSize-i] = normpdf(float(i), sigma);\n" +
+                        "        kernel[kSize + i] = kernel[kSize - i] = normpdf(float(i), sigma);\n" +
                         "    }\n" +
                         "\n" +
-                        "    //get the normalization factor (as the gaussian has been clamped)\n" +
+                        "    // get the normalization factor (as the gaussian has been clamped)\n" +
                         "    for (int i = 0; i < mSize; i++)\n" +
                         "    {\n" +
                         "        Z += kernel[i];\n" +
                         "    }\n" +
                         "\n" +
-                        "    //read out the texels\n" +
-                        "    for (int i=-kSize; i <= kSize; ++i)\n" +
-                        "    {\n" +
-                        "        for (int j=-kSize; j <= kSize; ++j)\n" +
+                        "//     read out the texels\n" +
+                        "        for (int i = -kSize; i <= kSize; i++)\n" +
                         "        {\n" +
-                        "            finalColor += kernel[kSize+i]*kernel[kSize+j]*texture2D(u_texture, v_texCoords.xy + vec2(float(i), float(j)) / vec2(300, 300)).rgb;\n" +
+                        "                finalColor += kernel[kSize + i] * texture2D(u_texture, v_texCoords.xy + vec2(float(i), 0.0) / v_resolution).rgb;\n" +
                         "        }\n" +
-                        "    }\n" +
+                        "        for (int j = -kSize; j <= kSize; j++)\n" +
+                        "        {\n" +
+//                        "                finalColor += kernel[kSize + j] * texture2D(u_texture, v_texCoords.xy + vec2(0.0, float(j)) / v_resolution).rgb;\n" +
+                        "        }\n" +
                         "\n" +
-                        "    return finalColor/(Z*Z);\n" +
+                        "    return finalColor ;\n" +
                         "}\n" +
                         "\n" +
                         "void main() {\n" +
-                        "    gl_FragColor = vec4(gaussianBlur(u_texture), 0.5) * v_color;\n" +
+                        "    gl_FragColor = vec4(gaussianBlur(u_texture), 1) * v_color;\n" +
                         "}"
         ));
         if (!material.getShaderProgram().isCompiled()) {
             Gdx.app.log("", material.getShaderProgram().getLog());
         }
+        material.setAttributef("a_resolution", materialImage.getWidth(), materialImage.getHeight(), 0, 0);
     }
 }
