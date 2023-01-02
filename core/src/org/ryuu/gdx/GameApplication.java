@@ -6,29 +6,44 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.MassData;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import lombok.Getter;
+import org.ryuu.gdx.audio.SoundManager;
 import org.ryuu.gdx.graphics.glutils.Material;
-import org.ryuu.gdx.scenes.scene2d.ui.MaterialImage;
 import org.ryuu.gdx.scenes.scene2d.ui.VisibleVerticalGroup;
 import org.ryuu.gdx.scenes.scene2d.utils.ActionUtil;
-import org.ryuu.gdx.audio.SoundManager;
-import org.ryuu.gdx.util.Screens;
 import org.ryuu.popup.PopUpEvent;
+import sun.nio.cs.UTF_8;
 
-import static com.badlogic.gdx.physics.box2d.BodyDef.BodyType.*;
+import java.nio.charset.StandardCharsets;
+
+import static com.badlogic.gdx.physics.box2d.BodyDef.BodyType.StaticBody;
 import static com.badlogic.gdx.utils.Align.center;
 import static com.badlogic.gdx.utils.Align.top;
+import static org.ryuu.gdx.$assets.*;
+import static org.ryuu.gdx.$assets.shader.*;
 import static org.ryuu.gdx.$assets.texture2d.badlogic_jpg;
 import static org.ryuu.gdx.$assets.texture2d.blur_png;
 import static org.ryuu.gdx.scenes.scene2d.utils.Actors.align;
-import static org.ryuu.gdx.util.Screens.*;
+import static org.ryuu.gdx.util.Screens.setSizeAsStage;
 
 public class GameApplication extends Game {
     public static final GameApplication GAME_APPLICATION = new GameApplication();
@@ -45,7 +60,7 @@ public class GameApplication extends Game {
         setScreen(new StageWorldScreen(1920, 1080, new StageWorldScreen.WorldSettings(
                 120, .02f, 4, 4
         )));
-        gaussianBlurTest();
+        fntTest();
     }
 
     public StageWorldScreen getStageWorldScreen() {
@@ -67,14 +82,66 @@ public class GameApplication extends Game {
         getStageWorldScreen().dispose();
     }
 
+    public void fntTest() {
+        Group group = setSizeAsStage(new Group());
+        getStage().addActor(group);
+
+        Label.LabelStyle labelStyle = new Label.LabelStyle();
+        labelStyle.font = new BitmapFont(Gdx.files.internal(fnt.newVarietyShowW9P64_fnt), Gdx.files.internal(fnt.newVarietyShowW9P64_png), false);
+        labelStyle.fontColor = Color.WHITE;
+
+        TestLabel label = new TestLabel(
+                "1234567890\n" +
+                        "abcdefghijklmnopqrstuvwxyz",
+                labelStyle
+        );
+        group.addActor(label);
+        align(label, center);
+    }
+
+    private static class TestLabel extends Label {
+        private final FrameBuffer frameBuffer;
+        private final TextureRegion textureRegion = new TextureRegion();
+        private final TextureRegionDrawable textureRegionDrawable = new TextureRegionDrawable(textureRegion);
+
+        public TestLabel(CharSequence text, LabelStyle style) {
+            super(text, style);
+            frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+        }
+
+        @Override
+        public void draw(Batch batch, float parentAlpha) {
+            frameBuffer.begin();
+            Gdx.gl.glClearColor(0, 0, 0, 1);
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+            super.draw(batch, parentAlpha);
+            batch.flush();
+            frameBuffer.end();
+
+            Texture bufferTexture = frameBuffer.getColorBufferTexture();
+            textureRegion.setTexture(bufferTexture);
+            textureRegion.setRegion(0, 0, bufferTexture.getWidth(), bufferTexture.getHeight());
+            textureRegion.flip(false, true);
+
+            ShaderProgram batchShader = batch.getShader();
+            batch.setShader(new ShaderProgram(Gdx.files.internal(gaussianBlur_vert).readString("UTF-8"), Gdx.files.internal(gaussianBlur_frag).readString("UTF-8")));
+            batch.getShader().setAttributef("a_resolution", Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 0);
+            setColor(1, 1, 1, .1f);
+            textureRegionDrawable.draw(batch, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.setShader(batchShader);
+            setColor(1, 1, 1, 1);
+            super.draw(batch, parentAlpha);
+        }
+    }
+
     public void soundMangerTest() {
         assetManager = new AssetManager();
-        assetManager.load($assets.sfx.button_mp3, Sound.class);
-        assetManager.load($assets.sfx.win_mp3, Music.class);
+        assetManager.load(sfx.button_mp3, Sound.class);
+        assetManager.load(sfx.win_mp3, Music.class);
         assetManager.finishLoading();
         soundManager = new SoundManager(10, (path) -> assetManager.get(path, Sound.class));
         for (int i = 0; i < 10; i++) {
-            getStage().addAction(ActionUtil.delay(i, () -> soundManager.play($assets.sfx.button_mp3, 1, 1, 1)));
+            getStage().addAction(ActionUtil.delay(i, () -> soundManager.play(sfx.button_mp3, 1, 1, 1)));
         }
     }
 
@@ -172,87 +239,5 @@ public class GameApplication extends Game {
 
         visibleVerticalGroup.top();
         visibleVerticalGroup.setDebug(true, true);
-    }
-
-    public void gaussianBlurTest() {
-        Group group = setSizeAsStage(new Group());
-        getStage().addActor(group);
-
-        MaterialImage materialImage = new MaterialImage(new Texture(blur_png));
-        group.addActor(materialImage);
-        align(materialImage, center);
-
-        Material material = new Material();
-        materialImage.setMaterial(material);
-        material.setShaderProgram(new ShaderProgram(
-                "attribute vec4 a_position;\n" +
-                        "attribute vec4 a_color;\n" +
-                        "attribute vec2 a_texCoord0;\n" +
-                        "attribute vec2 a_resolution;\n" +
-                        "uniform mat4 u_projTrans;\n" +
-                        "varying vec4 v_color;\n" +
-                        "varying vec2 v_texCoords;\n" +
-                        "varying vec2 v_resolution;\n" +
-                        "\n" +
-                        "void main() {\n" +
-                        "    v_color = a_color;\n" +
-                        "    v_texCoords = a_texCoord0;\n" +
-                        "    v_resolution = a_resolution;\n" +
-                        "    gl_Position = u_projTrans * a_position;\n" +
-                        "}",
-                "#ifdef GL_ES\n" +
-                        "precision mediump float;\n" +
-                        "#endif\n" +
-                        "\n" +
-                        "varying vec4 v_color;\n" +
-                        "varying vec2 v_texCoords;\n" +
-                        "varying vec2 v_resolution;\n" +
-                        "uniform sampler2D u_texture;\n" +
-                        "\n" +
-                        "float normpdf(in float x, in float sigma) {\n" +
-                        "    return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma;\n" +
-                        "}\n" +
-                        "\n" +
-                        "vec3 gaussianBlur(sampler2D texture) {\n" +
-                        "    const int mSize = 256;// TODO core size\n" +
-                        "    const int kSize = (mSize-1)/2;\n" +
-                        "    float kernel[mSize];\n" +
-                        "    vec3 finalColor = vec3(0.0);\n" +
-                        "\n" +
-                        "    // create the 1-D kernel\n" +
-                        "    float sigma = 7.0;\n" +
-                        "    float Z = 0.0;\n" +
-                        "    for (int i = 0; i <= kSize; i++)\n" +
-                        "    {\n" +
-                        "        kernel[kSize + i] = kernel[kSize - i] = normpdf(float(i), sigma);\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    // get the normalization factor (as the gaussian has been clamped)\n" +
-                        "    for (int i = 0; i < mSize; i++)\n" +
-                        "    {\n" +
-                        "        Z += kernel[i];\n" +
-                        "    }\n" +
-                        "\n" +
-                        "//     read out the texels\n" +
-                        "        for (int i = -kSize; i <= kSize; i++)\n" +
-                        "        {\n" +
-                        "                finalColor += kernel[kSize + i] * texture2D(u_texture, v_texCoords.xy + vec2(float(i), 0.0) / v_resolution).rgb;\n" +
-                        "        }\n" +
-                        "        for (int j = -kSize; j <= kSize; j++)\n" +
-                        "        {\n" +
-//                        "                finalColor += kernel[kSize + j] * texture2D(u_texture, v_texCoords.xy + vec2(0.0, float(j)) / v_resolution).rgb;\n" +
-                        "        }\n" +
-                        "\n" +
-                        "    return finalColor ;\n" +
-                        "}\n" +
-                        "\n" +
-                        "void main() {\n" +
-                        "    gl_FragColor = vec4(gaussianBlur(u_texture), 1) * v_color;\n" +
-                        "}"
-        ));
-        if (!material.getShaderProgram().isCompiled()) {
-            Gdx.app.log("", material.getShaderProgram().getLog());
-        }
-        material.setAttributef("a_resolution", materialImage.getWidth(), materialImage.getHeight(), 0, 0);
     }
 }

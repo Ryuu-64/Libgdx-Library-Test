@@ -1,6 +1,13 @@
 package org.ryuu.gdx;
 
 public class $assets {
+	public static final String fnt_ = "fnt/";
+	
+	public static class fnt {
+		public static final String newVarietyShowW9P64_fnt = "fnt/newVarietyShowW9P64.fnt";
+		public static final String newVarietyShowW9P64_png = "fnt/newVarietyShowW9P64.png";
+	}
+	
 	public static final String sfx_ = "sfx/";
 	
 	public static class sfx {
@@ -12,6 +19,13 @@ public class $assets {
 		public static final String win_mp3 = "sfx/win.mp3";
 	}
 	
+	public static final String shader_ = "shader/";
+	
+	public static class shader {
+		public static final String gaussianBlur_frag = "shader/gaussianBlur.frag";
+		public static final String gaussianBlur_vert = "shader/gaussianBlur.vert";
+	}
+	
 	public static final String texture2d_ = "texture2d/";
 	
 	public static class texture2d {
@@ -21,9 +35,12 @@ public class $assets {
 	}
 	
 	public static class $suffix {
+		public static final String _vert = ".vert";
 		public static final String _mp3 = ".mp3";
 		public static final String _jpg = ".jpg";
 		public static final String _ogg = ".ogg";
+		public static final String _fnt = ".fnt";
+		public static final String _frag = ".frag";
 		public static final String _png = ".png";
 	}
 }
