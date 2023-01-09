@@ -8,16 +8,16 @@ varying vec2 v_resolution;
 uniform sampler2D u_texture;
 
 float normalProbabilityDensity(in float x, in float sigma) {
-    return 0.39894 * exp(-(x * x) / (2 * sigma * sigma)) / sigma;
+    return 0.39894 * exp(-(x * x) / (2.0 * sigma * sigma)) / sigma;
 }
 
-vec3 gaussianBlur(sampler2D texture) {
-    const int kernelSize = 36;
+vec4 gaussianBlur(sampler2D texture) {
+    const int kernelSize = 65;
     const int halfKernelSize = (kernelSize - 1) / 2;
     float kernel[kernelSize];
-    vec3 color = vec3(0.0);
+    vec4 color = vec4(0.0);
 
-    float sigma = 7.0;
+    float sigma = 3.0;
     float kernelSum = 0.0;
     for (int i = 0; i <= halfKernelSize; i++)
     {
@@ -39,7 +39,7 @@ vec3 gaussianBlur(sampler2D texture) {
     {
         for (int j = -halfKernelSize; j <= halfKernelSize; j++)
         {
-            color += kernel[halfKernelSize + i] * kernel[halfKernelSize + j] * texture2D(u_texture, v_texCoords.xy + vec2(float(i), float(j)) / v_resolution).rgb;
+            color += kernel[halfKernelSize + i] * kernel[halfKernelSize + j] * texture2D(u_texture, v_texCoords.xy + vec2(float(i), float(j)) / v_resolution).rgba;
         }
     }
 
@@ -47,5 +47,5 @@ vec3 gaussianBlur(sampler2D texture) {
 }
 
 void main() {
-    gl_FragColor = vec4(gaussianBlur(u_texture), 1) * v_color;
+    gl_FragColor = gaussianBlur(u_texture) * v_color;
 }

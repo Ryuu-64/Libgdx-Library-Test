@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -26,23 +25,26 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import lombok.Getter;
-import org.ryuu.gdx.audio.SoundManager;
-import org.ryuu.gdx.graphics.glutils.Material;
+import org.ryuu.gdx.audio.SoundThreadPoolExecutor;
 import org.ryuu.gdx.scenes.scene2d.ui.VisibleVerticalGroup;
 import org.ryuu.gdx.scenes.scene2d.utils.ActionUtil;
 import org.ryuu.popup.PopUpEvent;
-import sun.nio.cs.UTF_8;
 
-import java.nio.charset.StandardCharsets;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static com.badlogic.gdx.physics.box2d.BodyDef.BodyType.StaticBody;
 import static com.badlogic.gdx.utils.Align.center;
 import static com.badlogic.gdx.utils.Align.top;
-import static org.ryuu.gdx.$assets.*;
-import static org.ryuu.gdx.$assets.shader.*;
+import static org.ryuu.gdx.$assets.fnt;
+import static org.ryuu.gdx.$assets.sfx;
+import static org.ryuu.gdx.$assets.shader.gaussianBlur_frag;
+import static org.ryuu.gdx.$assets.shader.gaussianBlur_vert;
 import static org.ryuu.gdx.$assets.texture2d.badlogic_jpg;
-import static org.ryuu.gdx.$assets.texture2d.blur_png;
+import static org.ryuu.gdx.$assets.texture2d.whitePixel_png;
 import static org.ryuu.gdx.scenes.scene2d.utils.Actors.align;
+import static org.ryuu.gdx.scenes.scene2d.utils.Actors.setSize;
 import static org.ryuu.gdx.util.Screens.setSizeAsStage;
 
 public class GameApplication extends Game {
@@ -50,7 +52,7 @@ public class GameApplication extends Game {
     @Getter
     private static AssetManager assetManager;
     @Getter
-    private static SoundManager soundManager;
+    private static SoundThreadPoolExecutor soundThreadPoolExecutor;
 
     private GameApplication() {
     }
@@ -60,7 +62,8 @@ public class GameApplication extends Game {
         setScreen(new StageWorldScreen(1920, 1080, new StageWorldScreen.WorldSettings(
                 120, .02f, 4, 4
         )));
-        fntTest();
+        soundMangerTest();
+//        fntTest();
     }
 
     public StageWorldScreen getStageWorldScreen() {
@@ -72,11 +75,6 @@ public class GameApplication extends Game {
     }
 
     @Override
-    public void render() {
-        super.render();
-    }
-
-    @Override
     public void dispose() {
         super.dispose();
         getStageWorldScreen().dispose();
@@ -85,6 +83,11 @@ public class GameApplication extends Game {
     public void fntTest() {
         Group group = setSizeAsStage(new Group());
         getStage().addActor(group);
+
+        Image background = new Image(new Texture(whitePixel_png));
+        group.addActor(background);
+        setSize(background, group);
+        background.setColor(Color.RED);
 
         Label.LabelStyle labelStyle = new Label.LabelStyle();
         labelStyle.font = new BitmapFont(Gdx.files.internal(fnt.newVarietyShowW9P64_fnt), Gdx.files.internal(fnt.newVarietyShowW9P64_png), false);
@@ -111,8 +114,12 @@ public class GameApplication extends Game {
 
         @Override
         public void draw(Batch batch, float parentAlpha) {
+            batch.flush();
+
+            setColor(Color.BLUE);
+
             frameBuffer.begin();
-            Gdx.gl.glClearColor(0, 0, 0, 1);
+            Gdx.gl.glClearColor(1, 1, 1, 0);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
             super.draw(batch, parentAlpha);
             batch.flush();
@@ -126,10 +133,9 @@ public class GameApplication extends Game {
             ShaderProgram batchShader = batch.getShader();
             batch.setShader(new ShaderProgram(Gdx.files.internal(gaussianBlur_vert).readString("UTF-8"), Gdx.files.internal(gaussianBlur_frag).readString("UTF-8")));
             batch.getShader().setAttributef("a_resolution", Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 0);
-            setColor(1, 1, 1, .1f);
             textureRegionDrawable.draw(batch, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             batch.setShader(batchShader);
-            setColor(1, 1, 1, 1);
+
             super.draw(batch, parentAlpha);
         }
     }
@@ -137,12 +143,21 @@ public class GameApplication extends Game {
     public void soundMangerTest() {
         assetManager = new AssetManager();
         assetManager.load(sfx.button_mp3, Sound.class);
-        assetManager.load(sfx.win_mp3, Music.class);
+        assetManager.load(sfx.win_mp3, Sound.class);
         assetManager.finishLoading();
-        soundManager = new SoundManager(10, (path) -> assetManager.get(path, Sound.class));
-        for (int i = 0; i < 10; i++) {
-            getStage().addAction(ActionUtil.delay(i, () -> soundManager.play(sfx.button_mp3, 1, 1, 1)));
-        }
+        soundThreadPoolExecutor = new SoundThreadPoolExecutor(
+                new ThreadPoolExecutor(
+                        1,
+                        1,
+                        1,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(1 << 10)
+                )
+        );
+        soundThreadPoolExecutor.play(assetManager.get(sfx.button_mp3, Sound.class));
+        SoundThreadPoolExecutor.SoundWrapper play = soundThreadPoolExecutor.play(assetManager.get(sfx.win_mp3, Sound.class));
+        Sound sound = play.getSound();
+
     }
 
     public void popUpTest() {
